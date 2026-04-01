@@ -1,0 +1,6 @@
+Requirements
+streamlit
+pandas
+openpyxl
+plotly
+requests

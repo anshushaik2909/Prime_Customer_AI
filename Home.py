@@ -1,6 +1,7 @@
 import streamlit as st
 from app import load_data, save_delivery
 import requests
+from chatbot import SmartChatbot
 
 # ======================================
 # PAGE CONFIG
@@ -105,8 +106,14 @@ if st.button("🔄 Reset Delivery State"):
 # LOAD DATA
 # ======================================
 df, saved_delivered = load_data()
+
+# ✅ FIX 1: Initialize delivered_orders FIRST
 if "delivered_orders" not in st.session_state:
     st.session_state.delivered_orders = saved_delivered
+
+# ✅ FIX 2: THEN initialize chatbot
+if "bot" not in st.session_state:
+    st.session_state.bot = SmartChatbot(df, st.session_state.delivered_orders)
 
 # ======================================
 # HEADER
@@ -218,32 +225,23 @@ with st.container():
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================================
-# CHAT PANEL (WORKING - NO API NEEDED)
+# CHAT PANEL
 # ======================================
 if st.session_state.chat_open:
     st.markdown('<div class="chat-panel">', unsafe_allow_html=True)
     st.markdown("### 🤖 AI Assistant")
 
+    # ✅ FIX 3: KEEP EVERYTHING INSIDE THIS BLOCK
     for role, msg in st.session_state.chat_history:
-        st.chat_message(role).write(msg)
+        with st.chat_message(role):
+            st.markdown(msg)
 
     prompt = st.chat_input("Ask anything…")
 
     if prompt:
         st.session_state.chat_history.append(("user", prompt))
 
-        # SIMPLE SMART RESPONSES (NO API)
-        if "total" in prompt.lower():
-            reply = f"Total orders: {len(df)}"
-        elif "delivered" in prompt.lower():
-            reply = f"Delivered orders: {len(already_delivered)}"
-        elif "pending" in prompt.lower():
-            reply = f"Pending orders: {len(pending)}"
-        elif "priority" in prompt.lower():
-            top_orders = deliver_now.head(3)["Delivery Number"].tolist()
-            reply = f"Top priority orders: {top_orders}"
-        else:
-            reply = "I can help with delivery insights. Try asking about total, pending, or priority orders."
+        reply = st.session_state.bot.respond(prompt)
 
         st.session_state.chat_history.append(("assistant", reply))
         st.rerun()

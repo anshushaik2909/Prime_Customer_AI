@@ -148,11 +148,13 @@ pending = remaining_orders.iloc[max_deliveries:]
 # ======================================
 # METRICS
 # ======================================
-m1, m2, m3, m4 = st.columns(4)
+#m1, m2, m3, m4 = st.columns(4)
+m1, m2, m3, m4, m5 = st.columns(5)
 m1.metric("Total Orders", len(df))
 m2.metric("Already Delivered", len(already_delivered))
 m3.metric("Deliver Now", len(deliver_now))
 m4.metric("Pending", len(pending))
+m5.metric("Total Customers", df["Customer Number"].nunique())
 st.divider()
 
 # ======================================
